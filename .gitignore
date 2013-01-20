@@ -1,0 +1,7 @@
+/ebin
+/deps
+erl_crash.dump
+*.beam
+vendor/
+imap_parser/
+imap_parser.leex/
