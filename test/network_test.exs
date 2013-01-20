@@ -5,7 +5,7 @@ defmodule GmailSynchronize.Network.Test do
 
   alias GmailSynchronize.Network, as: Net
 
-  defrecord TestInput, buffers: [], current_buffer: ""
+  defrecord TestInput, buffers: [], current_buffer: "", re_buffered: 0
 
   defimpl Net.BufferManagement, for: TestInput do
     def buffer(TestInput[current_buffer: buffer]), do: buffer
@@ -17,7 +17,7 @@ defmodule GmailSynchronize.Network.Test do
     def fill_buffer(TestInput[buffers: [next|rest]] = input) do
       # This is sensible only for small amounts of data.
       input = input.current_buffer(<<input.current_buffer :: binary, next :: binary>>)
-      input.buffers(rest)
+      input.re_buffered(input.re_buffered + 1).buffers(rest)
     end
 
     def has_bytes_buffered?(TestInput[current_buffer: buffer], bytes) when size(buffer) >= bytes, do: true
@@ -36,6 +36,7 @@ defmodule GmailSynchronize.Network.Test do
     {line, reader} = Net.read_line(reader)
     assert line == "abcdefg"
     assert Net.BufferManagement.buffer(reader.input) == "foo"
+    assert reader.input.re_buffered == 2
   end
 
   test "returns N bytes in a buffer of M>=N bytes" do
@@ -50,5 +51,6 @@ defmodule GmailSynchronize.Network.Test do
     {n_bytes, reader} = Net.read_n_bytes(reader, 5)
     assert n_bytes == "fooba"
     assert Net.BufferManagement.buffer(reader.input) == "r"
+    assert reader.input.re_buffered == 4
   end
 end
