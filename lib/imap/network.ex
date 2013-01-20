@@ -8,13 +8,18 @@ defmodule GmailSynchronize.Network do
 
   defrecord NetworkReader, input: nil
 
-  def has_full_line?(buffer) do
-      # This seems silly, but apparently is the best way to test for
-      # whether a binary contains two bytes in succession. This may be
-      # faster to test for in a recursive function walking the
-      # never-copied binary.
-      length(String.split(buffer, "\r\n")) > 1
+  def has_full_line?(<<>>), do: false
+
+  def has_full_line?(<<"\r", rest::binary>>) do
+    case rest do
+      <<"\n", _::binary>> ->
+        true
+      _ ->
+        has_full_line?(rest)
+    end
   end
+
+  def has_full_line?(<<_, rest::binary>>), do: has_full_line?(rest)
 
   def read_line(NetworkReader[input: input] = reader) do
     if has_full_line?(BufferManagement.buffer(input)) do
