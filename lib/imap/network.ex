@@ -26,8 +26,7 @@ defmodule GmailSynchronize.Network do
       [line, rest] = String.split(BufferManagement.buffer(input), "\r\n", global: false)
       {line, reader.input(BufferManagement.update_buffer(input, rest))}
     else
-      input = BufferManagement.fill_buffer(input)
-      read_line(reader.input(input))
+      with_refilled_buffer(reader, fn (reader) -> read_line(reader) end)
     end
   end
 
@@ -36,8 +35,11 @@ defmodule GmailSynchronize.Network do
       <<n_bytes :: [size(n), binary], rest :: binary>> = BufferManagement.buffer(input)
       {n_bytes, reader.input(BufferManagement.update_buffer(input, rest))}
     else
-      input = BufferManagement.fill_buffer(input)
-      read_n_bytes(reader.input(input), n)
+      with_refilled_buffer(reader, fn (reader) -> read_n_bytes(reader, n) end)
     end
+  end
+
+  defp with_refilled_buffer(NetworkReader[input: input] = reader, fun) do
+    fun.(reader.input(BufferManagement.fill_buffer(input)))
   end
 end
