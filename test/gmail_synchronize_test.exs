@@ -53,11 +53,6 @@ defmodule GmailSynchronize.Network.Test do
     end
 
     def has_bytes_buffered?(_, _), do: false
-
-    def has_full_line?(TestInput[current_buffer: buffer]) do
-      # FIXME: This seems silly
-      length(String.split(buffer, "\r\n")) > 1
-    end
   end
 
   test "returns a line when so buffered" do
