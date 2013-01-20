@@ -75,4 +75,11 @@ defmodule GmailSynchronize.Network.Test do
     assert n_bytes == "fooba"
     assert GmailSynchronize.Network.BufferManagement.buffer(reader.input) == "r"
   end
+
+  test "returns N bytes even when it has to re-fill the buffer" do
+    reader = GmailSynchronize.Network.NetworkReader.new(input: TestInput.new(buffers: ["f", "o", "o", "bar"]))
+    {n_bytes, reader} = GmailSynchronize.Network.read_n_bytes(reader, 5)
+    assert n_bytes == "fooba"
+    assert GmailSynchronize.Network.BufferManagement.buffer(reader.input) == "r"
+  end
 end
