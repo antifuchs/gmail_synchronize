@@ -8,6 +8,12 @@ defmodule GmailSynchronize.Network do
 
   defrecord NetworkReader, input: nil
 
+  def has_full_line([]), do: false
+
+  def has_full_line?([buf|rest]) do
+    has_full_line?(buf) || has_full_line?(rest)
+  end
+
   def has_full_line?(<<>>), do: false
 
   def has_full_line?(<<"\r", rest::binary>>) do
@@ -21,21 +27,36 @@ defmodule GmailSynchronize.Network do
 
   def has_full_line?(<<_, rest::binary>>), do: has_full_line?(rest)
 
-  def read_line(NetworkReader[input: input] = reader) do
+  defp read_line_buffers(NetworkReader[input: input] = reader) do
     if has_full_line?(BufferManagement.buffer(input)) do
       [line, rest] = String.split(BufferManagement.buffer(input), "\r\n", global: false)
-      {line, reader.input(BufferManagement.update_buffer(input, rest))}
+      {[line], reader.input(BufferManagement.update_buffer(input, rest))}
     else
-      with_refilled_buffer(reader, fn (reader) -> read_line(reader) end)
+      with_refilled_buffer reader,
+        fn (reader) ->
+             {buffers, reader} = read_line_buffers(reader)
+             {[BufferManagement.buffer(input) | buffers], reader}
+        end
     end
+  end
+
+  def read_line(reader) do
+    {line_buffers, reader} = read_line_buffers(reader)
+    {Enum.map_join(line_buffers, '', binary_to_list(&1)), reader}
   end
 
   def read_n_bytes(NetworkReader[input: input] = reader, n) do
     if BufferManagement.has_bytes_buffered?(input, n) do
       <<n_bytes :: [size(n), binary], rest :: binary>> = BufferManagement.buffer(input)
-      {n_bytes, reader.input(BufferManagement.update_buffer(input, rest))}
+      {[n_bytes], reader.input(BufferManagement.update_buffer(input, rest))}
     else
-      with_refilled_buffer(reader, fn (reader) -> read_n_bytes(reader, n) end)
+      current_buffer_length = size(BufferManagement.buffer(input))
+      {n_bytes, reader} = with_refilled_buffer(reader, fn (reader) -> read_n_bytes(reader, n - current_buffer_length) end)
+      if current_buffer_length == 0 do
+        {n_bytes, reader}
+      else
+        {[BufferManagement.buffer(input) | n_bytes], reader}
+      end
     end
   end
 
