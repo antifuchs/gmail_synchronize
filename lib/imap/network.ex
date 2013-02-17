@@ -52,11 +52,7 @@ defmodule GmailSynchronize.Network do
     else
       current_buffer_length = size(BufferManagement.buffer(input))
       {n_bytes, reader} = with_refilled_buffer(reader, fn (reader) -> read_n_bytes(reader, n - current_buffer_length) end)
-      if current_buffer_length == 0 do
-        {n_bytes, reader}
-      else
-        {[BufferManagement.buffer(input) | n_bytes], reader}
-      end
+      {[BufferManagement.buffer(input) | n_bytes], reader}
     end
   end
 

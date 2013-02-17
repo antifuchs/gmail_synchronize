@@ -46,14 +46,14 @@ defmodule GmailSynchronize.Network.Test do
   test "returns N bytes in a buffer of M>=N bytes" do
     reader = Net.NetworkReader.new(input: TestInput.new(buffers: ["foobar"]))
     {n_bytes, reader} = Net.read_n_bytes(reader, 5)
-    assert n_bytes == ["fooba"]
+    assert iolist_to_binary(n_bytes) == "fooba"
     assert Net.BufferManagement.buffer(reader.input) == "r"
   end
 
   test "returns N bytes even when it has to re-fill the buffer" do
     reader = Net.NetworkReader.new(input: TestInput.new(buffers: ["f", "o", "o", "", "bar"]))
     {n_bytes, reader} = Net.read_n_bytes(reader, 5)
-    assert n_bytes == ["f", "o", "o", "ba"]
+    assert iolist_to_binary(n_bytes) == "fooba"
     assert Net.BufferManagement.buffer(reader.input) == "r"
     assert reader.input.re_buffered == 5
   end
