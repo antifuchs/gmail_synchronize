@@ -3,5 +3,5 @@
 erl_crash.dump
 *.beam
 vendor/
-imap_parser/
-imap_parser.leex/
+/src/imap_parser.erl
+/src/imap_scan.erl
