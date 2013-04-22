@@ -1,0 +1,8 @@
+Some links that might be useful for this thing:
+
+* https://developers.google.com/accounts/docs/OAuth2InstalledApp
+* http://www.imapwiki.org/Specs
+* [[file:///ftp:ftp@ftp.rfc-editor.org:/in-notes/rfc3501.txt]]
+* http://dovecot.org/imap-client-coding-howto.html
+* https://github.com/saleyn/erlexec
+  Interesting for running local dovecots.
